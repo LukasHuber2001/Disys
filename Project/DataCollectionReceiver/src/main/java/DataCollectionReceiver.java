@@ -1,12 +1,16 @@
 import java.nio.charset.StandardCharsets;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
-import com.rabbitmq.client.DeliverCallback;
 
-import java.nio.charset.StandardCharsets;
+import com.rabbitmq.client.*;
+
+
 public class DataCollectionReceiver {
-    private final static String QUEUE_NAME = "DispatcherToReceiver";
+    private static final String RPC_QUEUE_NAME = "toDataCollectionReceiver";
+    private static String sortGatheredData(){
+        String[] dataArray;
+
+
+        //TODO Querry for each available station 123 for i < stations.length() getDataCollection(stationid)
+    }
 
     public static void main(String[] argv) throws Exception {
         ConnectionFactory factory = new ConnectionFactory();
@@ -14,15 +18,34 @@ public class DataCollectionReceiver {
 
         Connection connection = factory.newConnection();
         Channel channel = connection.createChannel();
+        channel.queueDeclare(RPC_QUEUE_NAME, false, false, false, null);
+        channel.queuePurge(RPC_QUEUE_NAME);
 
-        channel.queueDeclare(QUEUE_NAME, false, false, false, null);
-        System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
+        channel.basicQos(1);
+
+        System.out.println(" [x] Awaiting RPC requests");
 
         DeliverCallback deliverCallback = (consumerTag, delivery) -> {
-            String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
-            System.out.println(" [x] Received '" + message + "'");
+            AMQP.BasicProperties replyProps = new AMQP.BasicProperties
+                    .Builder()
+                    .correlationId(delivery.getProperties().getCorrelationId())
+                    .build();
+
+            String response = "";
+            try {
+                String message = new String(delivery.getBody(), "UTF-8");
+                String n = message.toString();
+
+                System.out.println(" [.] sent Total: (" + message + ")");
+
+            } catch (RuntimeException e) {
+                System.out.println(" [.] " + e);
+            } finally {
+                channel.basicPublish("", delivery.getProperties().getReplyTo(), replyProps, response.getBytes("UTF-8"));
+                channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
+            }
         };
-        channel.basicConsume(QUEUE_NAME, true, deliverCallback, consumerTag -> {
-        });
+
+        channel.basicConsume(RPC_QUEUE_NAME, false, deliverCallback, (consumerTag -> {}));
     }
 }

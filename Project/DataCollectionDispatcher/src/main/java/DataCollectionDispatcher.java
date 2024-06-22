@@ -1,15 +1,18 @@
 import com.rabbitmq.client.*;
 
+import java.util.List;
+
 
 public class DataCollectionDispatcher {
 
     private static final String RPC_QUEUE_NAME = "toDataCollectionDispatcher";
-    private static String helloText(String s){
-        if(s.length()==0){
-            return "please enter something";
-        }else{
-            return s+" i just got this new id";
-        }
+    private static String getAvailabelStations(){
+        String stations = "1 2 3";
+
+        //TODO query for every available stations, (add the id of the station with id + " " after the first entry)
+
+        return stations;
+
     }
 
     public static void main(String[] argv) throws Exception {
@@ -30,14 +33,10 @@ public class DataCollectionDispatcher {
                     .Builder()
                     .correlationId(delivery.getProperties().getCorrelationId())
                     .build();
-
             String response = "";
             try {
-                String message = new String(delivery.getBody(), "UTF-8");
-                String n = message.toString();
-
-                System.out.println(" [.] sentId: (" + message + ")");
-                response += helloText(n);
+                System.out.println(" [.] Started Dispatching Job");
+                 response = getAvailabelStations();
             } catch (RuntimeException e) {
                 System.out.println(" [.] " + e);
             } finally {

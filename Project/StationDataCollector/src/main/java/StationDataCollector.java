@@ -6,19 +6,14 @@ import java.util.List;
 
 public class StationDataCollector {
     private static final String RPC_QUEUE_NAME = "toStationDataCollector";
-    private static String getStationData(String s){
-        if(s.length()==0){
-            return "please enter something for me to search for";
-        }else{
-            List<String> results;
 
+    private static int getStationData(String s) {
+        //test total ammount
+        int total = 5;
 
-            /*
-            SQL Querry
-             results.add(Station);
-             */
-            return "works";
-        }
+        // TODO querry db table station and set total to the total ammount of kwh
+
+        return total;
     }
 
     public static void main(String[] argv) throws Exception {
@@ -40,21 +35,23 @@ public class StationDataCollector {
                     .correlationId(delivery.getProperties().getCorrelationId())
                     .build();
 
-            String response = "";
+            int response = 0;
             try {
                 String message = new String(delivery.getBody(), "UTF-8");
                 String id = message.toString();
 
-                System.out.println(" [.] sentId: (" + message + ")");
-                response += getStationData(id);
+                System.out.println(" [.] sentId: (" + id + ")");
+                response = getStationData(id);
             } catch (RuntimeException e) {
                 System.out.println(" [.] " + e);
             } finally {
-                channel.basicPublish("", delivery.getProperties().getReplyTo(), replyProps, response.getBytes("UTF-8"));
+                String srtResponse = "" +response;
+                channel.basicPublish("", delivery.getProperties().getReplyTo(), replyProps, srtResponse.getBytes("UTF-8"));
                 channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
             }
         };
 
-        channel.basicConsume(RPC_QUEUE_NAME, false, deliverCallback, (consumerTag -> {}));
+        channel.basicConsume(RPC_QUEUE_NAME, false, deliverCallback, (consumerTag -> {
+        }));
     }
 }
