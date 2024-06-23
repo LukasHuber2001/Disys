@@ -15,7 +15,7 @@ public class DataCollectionDispatcher {
 
     private static String getAvailableStations() {
         List<String> stationIds = new ArrayList<>();
-        String dbUrl = "jdbc:postgresql://localhost:30002/postgres"; // Adjust the DB URL if necessary
+        String dbUrl = "jdbc:postgresql://localhost:30002/stationdb"; // Adjust the DB URL if necessary
         String user = "postgres";
         String password = "postgres";
 
