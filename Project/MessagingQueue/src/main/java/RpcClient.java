@@ -31,45 +31,71 @@ public class RpcClient implements AutoCloseable {
         String regex = "[,\\.\\s]";
         String customerId = "1";
         String availableStations = "";
-        String message;
+        String messageReceiverToPdf = "";
+
+
         int total = 0;
+        try (RpcClient sendDataToReceiver = new RpcClient()) {
 
-        try (RpcClient sendCustomerId = new RpcClient()) {
-            System.out.println(" [x] Requesting information on available Stations");
-            availableStations = sendCustomerId.callToStationCollectionDispatcher();
-            System.out.println(" [.] Available Stations: '" + availableStations + "'");
+            //TODO wenn die query für alle customer daten geht wird hier nicht nur die id sondern alles vom customer übergeben
+            sendDataToReceiver.callToDataCollectionReceiver(customerId);
+            System.out.println("Sent Customer Id: "+ customerId +" to Data Collection Receiver");
 
-            String[] myArray = availableStations.split(regex);
-            for (String s : myArray) {
-                System.out.println(s);
-                String idAndStation = customerId + " " + s;
-                try (RpcClient getStationData = new RpcClient()) {
+            try (RpcClient sendCustomerId = new RpcClient()) {
+                System.out.println(" [x] Requesting information on available Stations");
+                availableStations = sendCustomerId.callToStationCollectionDispatcher();
+                System.out.println(" [.] Available Stations: '" + availableStations + "'");
 
-                    System.out.println("[x] Requesting Station "+ s +" data for customer " + customerId);
-                    total += Integer.parseInt(getStationData.callToStationDataCollector(idAndStation));
-                    //test
-                    System.out.println("[.] total so far :" + total);
+                String[] myArray = availableStations.split(regex);
+                for (String s : myArray) {
+                    String idAndStation = customerId + " " + s;
+                    try (RpcClient getStationData = new RpcClient()) {
 
+                        System.out.println("[x] Requesting Station " + s + " data for customer " + customerId);
+                        //für jede station
 
-                } catch (IOException | TimeoutException | InterruptedException | ExecutionException e) {
-                    e.printStackTrace();
+                        total += Integer.parseInt(getStationData.callToStationDataCollector(idAndStation));
+                        System.out.println("[.] total so far :" + total);
+
+                    } catch (IOException | TimeoutException | InterruptedException | ExecutionException e) {
+                        e.printStackTrace();
+                    }
                 }
+                sendDataToReceiver.callToDataCollectionReceiver(Integer.toString(total));
+                System.out.println("your total amounts to " + total + "€");
+            } catch (IOException | TimeoutException | InterruptedException | ExecutionException e) {
+                e.printStackTrace();
             }
-            System.out.println("your total amounts to "+total+"€");
-        } catch (IOException | TimeoutException | InterruptedException | ExecutionException e) {
-            e.printStackTrace();
-        }/*
-        try (RpcClient sendInfoToReceiver = new RpcClient()) {
-            System.out.println("[x] Requesting searching data for " + availableStations);
-            stationData = sendInfoToReceiver.callToDataCollectionReceiver(customerId);
-            //testing
-            System.out.println("[.] Test if this works:" + stationData);
+
         } catch (IOException | TimeoutException | InterruptedException | ExecutionException e) {
             e.printStackTrace();
         }
-        */
+
     }
 
+    public String callToPdfGenerator(String message) throws IOException, InterruptedException, ExecutionException {
+        final String corrId = UUID.randomUUID().toString();
+
+        String replyQueueName = channel.queueDeclare().getQueue();
+        AMQP.BasicProperties props = new AMQP.BasicProperties
+                .Builder()
+                .correlationId(corrId)
+                .replyTo(replyQueueName)
+                .build();
+        channel.basicPublish("", requestQueueName4, props, message.getBytes("UTF-8"));
+        final CompletableFuture<String> response = new CompletableFuture<>();
+
+        String ctag = channel.basicConsume(replyQueueName, true, (consumerTag, delivery) -> {
+            if (delivery.getProperties().getCorrelationId().equals(corrId)) {
+                response.complete(new String(delivery.getBody(), "UTF-8"));
+            }
+        }, consumerTag -> {
+        });
+
+        String result = response.get();
+        channel.basicCancel(ctag);
+        return result;
+    }
 
     public String callToDataCollectionReceiver(String message) throws IOException, InterruptedException, ExecutionException {
         final String corrId = UUID.randomUUID().toString();

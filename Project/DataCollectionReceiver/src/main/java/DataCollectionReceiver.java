@@ -5,11 +5,15 @@ import com.rabbitmq.client.*;
 
 public class DataCollectionReceiver {
     private static final String RPC_QUEUE_NAME = "toDataCollectionReceiver";
-    private static String sortGatheredData(){
-        String[] dataArray;
-
-
-        //TODO Querry for each available station 123 for i < stations.length() getDataCollection(stationid)
+    public static String dataCollected = "";
+    private static String gatherData(String message){
+        // so far the receiver only gets the customer id and the total
+        if (dataCollected.length()==0){
+            dataCollected = message;
+        }else {
+            dataCollected += " " + message;
+        }
+        return dataCollected;
     }
 
     public static void main(String[] argv) throws Exception {
@@ -36,8 +40,9 @@ public class DataCollectionReceiver {
                 String message = new String(delivery.getBody(), "UTF-8");
                 String n = message.toString();
 
-                System.out.println(" [.] sent Total: (" + message + ")");
-
+                System.out.println(" [.] data Received: (" + message + ")");
+                gatherData(n);
+                System.out.println("[x] Data gathered so far (" + dataCollected +")");
             } catch (RuntimeException e) {
                 System.out.println(" [.] " + e);
             } finally {
