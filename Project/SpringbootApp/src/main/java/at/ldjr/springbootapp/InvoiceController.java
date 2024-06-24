@@ -2,8 +2,6 @@ package at.ldjr.springbootapp;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -13,22 +11,19 @@ import java.nio.file.Paths;
 @RequestMapping("/invoices")
 public class InvoiceController {
 
-    private final RabbitTemplate rabbitTemplate;
+    public static String userID="";
 
-    @Autowired
-    public InvoiceController(RabbitTemplate rabbitTemplate) {
-        this.rabbitTemplate = rabbitTemplate;
-    }
-
-    @PostMapping("/{customerId}")
+    @PostMapping("/post/{customerId}")
     public ResponseEntity<String> startDataGatheringJob(@PathVariable String customerId) {
-        // Send a message to the RabbitMQ queue
-        rabbitTemplate.convertAndSend("yourQueueName", customerId);
-
-        return ResponseEntity.ok("Data gathering job started for customer " + customerId);
+        try {
+            userID = customerId;
+            return ResponseEntity.ok("Data gathering job started for customer " + customerId);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error starting data gathering job: " + e.getMessage());
+        }
     }
 
-    @GetMapping("/{customerId}")
+    @GetMapping("/get/{customerId}")
     public ResponseEntity<?> getInvoice(@PathVariable String customerId) {
         // Define the path to the invoice PDF
         Path invoicePath = Paths.get("../File Storage", customerId + ".pdf");
@@ -42,4 +37,9 @@ public class InvoiceController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invoice not found for customer " + customerId);
         }
     }
+
+    public static String getUserID() {
+        return userID;
+    }
 }
+
