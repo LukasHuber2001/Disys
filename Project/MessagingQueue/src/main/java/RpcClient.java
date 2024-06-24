@@ -34,6 +34,7 @@ public class RpcClient implements AutoCloseable {
         String messageReceiverToPdf = "";
 
 
+
         int total = 0;
         try (RpcClient sendDataToReceiver = new RpcClient()) {
 

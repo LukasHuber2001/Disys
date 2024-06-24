@@ -12,13 +12,13 @@ import java.util.ArrayList;
 public class DataCollectionDispatcher {
 
     private static final String RPC_QUEUE_NAME = "toDataCollectionDispatcher";
+    protected static String dbUrl = "jdbc:postgresql://localhost:30002/postgres";
+
 
     private static String getAvailableStations() {
         List<String> stationIds = new ArrayList<>();
-        String dbUrl = "jdbc:postgresql://localhost:30002/postgres"; // Adjust the DB URL if necessary
         String user = "postgres";
         String password = "postgres";
-
 
         try (Connection conn = DriverManager.getConnection(dbUrl, user, password);
              Statement stmt = conn.createStatement();
@@ -38,8 +38,8 @@ public class DataCollectionDispatcher {
         ConnectionFactory factory = new ConnectionFactory();
         factory.setHost("localhost");
 
-        try (com.rabbitmq.client.Connection connection = factory.newConnection();
-             Channel channel = connection.createChannel()) {
+            com.rabbitmq.client.Connection connection = factory.newConnection();
+            Channel channel = connection.createChannel();{
             channel.queueDeclare(RPC_QUEUE_NAME, false, false, false, null);
             channel.queuePurge(RPC_QUEUE_NAME);
             channel.basicQos(1);
@@ -53,6 +53,7 @@ public class DataCollectionDispatcher {
                         .build();
 
                 String response = "";
+
 
                 try {
                     System.out.println(" [.] Started Dispatching Job");
