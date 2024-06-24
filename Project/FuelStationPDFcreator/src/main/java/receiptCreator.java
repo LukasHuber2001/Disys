@@ -118,7 +118,6 @@ public class receiptCreator {
             DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd.MM.yyyy");
             LocalDateTime now = LocalDateTime.now();
             String full_name = firstName + ' ' + lastName;
-            String station_number = "Station 1";
 
             PdfWriter writer = new PdfWriter(path);
             PdfDocument pdf = new PdfDocument(writer);
@@ -147,9 +146,9 @@ public class receiptCreator {
                     .setHorizontalAlignment(HorizontalAlignment.CENTER)
                     .setMarginTop(10)
                     .setMarginBottom(20);
-            table.addHeaderCell(new Paragraph("Station Number").setFont(font));
+            table.addHeaderCell(new Paragraph("Product").setFont(font));
             table.addHeaderCell(new Paragraph("kWh").setFont(font));
-            table.addCell(station_number);
+            table.addCell("Electric Fuel Station");
             table.addCell(total);
 
             document.add(table);

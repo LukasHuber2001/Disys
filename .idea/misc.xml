@@ -3,12 +3,12 @@
   <component name="MavenProjectsManager">
     <option name="originalFiles">
       <list>
-        <option value="$PROJECT_DIR$/Project/DataCollectionDispatcher/pom.xml" />
-        <option value="$PROJECT_DIR$/Project/DataCollectionReceiver/pom.xml" />
-        <option value="$PROJECT_DIR$/Project/SpringbootApp/pom.xml" />
         <option value="$PROJECT_DIR$/Project/StationDataCollector/pom.xml" />
-        <option value="$PROJECT_DIR$/Project/FuelStationPDFcreator/pom.xml" />
+        <option value="$PROJECT_DIR$/Project/SpringbootApp/pom.xml" />
         <option value="$PROJECT_DIR$/Project/JavaFX/pom.xml" />
+        <option value="$PROJECT_DIR$/Project/FuelStationPDFcreator/pom.xml" />
+        <option value="$PROJECT_DIR$/Project/DataCollectionReceiver/pom.xml" />
+        <option value="$PROJECT_DIR$/Project/DataCollectionDispatcher/pom.xml" />
       </list>
     </option>
   </component>
