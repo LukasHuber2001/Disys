@@ -44,7 +44,7 @@ public class InvoiceController {
     @GetMapping("/get/{customerId}")
     public ResponseEntity<?> getInvoice(@PathVariable String customerId) {
         // Define the path to the invoice PDF
-        Path invoicePath = Paths.get("../File Storage", customerId + ".pdf");
+        Path invoicePath = Paths.get("../FileStorage", customerId + ".pdf");
 
         // Check if the invoice PDF exists
         if (Files.exists(invoicePath)) {
