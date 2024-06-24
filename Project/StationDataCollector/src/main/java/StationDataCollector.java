@@ -5,6 +5,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.concurrent.CountDownLatch;
 
 public class StationDataCollector {
     private static final String RPC_QUEUE_NAME = "toStationDataCollector";
@@ -73,6 +74,10 @@ public class StationDataCollector {
 
             channel.basicConsume(RPC_QUEUE_NAME, false, deliverCallback, (consumerTag -> {
             }));
+
+            // Use CountDownLatch to keep the main thread alive
+            CountDownLatch latch = new CountDownLatch(1);
+            latch.await();
         }
     }
 }

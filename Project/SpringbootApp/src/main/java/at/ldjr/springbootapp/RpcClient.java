@@ -82,6 +82,7 @@ public class RpcClient implements AutoCloseable {
                     }
                 }
                 messageReceiverToPdf = sendDataToReceiver.callToDataCollectionReceiver(Integer.toString(total));
+                System.out.println(messageReceiverToPdf);
                 System.out.println("your total amounts to " + total + "€");
             } catch (IOException | TimeoutException | InterruptedException | ExecutionException e) {
                 e.printStackTrace();

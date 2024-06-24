@@ -1,17 +1,23 @@
 import java.nio.charset.StandardCharsets;
+import java.util.Objects;
 
 import com.rabbitmq.client.*;
 
 
 public class DataCollectionReceiver {
+    private static String regex = "[,\\.\\s]";
     private static final String RPC_QUEUE_NAME = "toDataCollectionReceiver";
     public static String dataCollected = "";
     private static String gatherData(String message){
         // so far the receiver only gets the customer id and the total
-        if (dataCollected.length()==0){
-            dataCollected = message;
-        }else {
+        String [] checkIfNew = dataCollected.split(regex);
+        if(checkIfNew.length >= 2){
+            dataCollected = "";
+        }
+        if(!Objects.equals(dataCollected, "")) {
             dataCollected += " " + message;
+        } else{
+            dataCollected += message;
         }
         return dataCollected;
     }
@@ -41,7 +47,7 @@ public class DataCollectionReceiver {
                 String n = message.toString();
 
                 System.out.println(" [.] data Received: (" + message + ")");
-                gatherData(n);
+                response = gatherData(n);
                 System.out.println("[x] Data gathered so far (" + dataCollected +")");
             } catch (RuntimeException e) {
                 System.out.println(" [.] " + e);
