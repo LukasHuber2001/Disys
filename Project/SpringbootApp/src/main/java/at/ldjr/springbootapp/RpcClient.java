@@ -1,14 +1,12 @@
 package at.ldjr.springbootapp;
 
-import com.rabbitmq.client.AMQP;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.*;
+
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 import java.util.concurrent.*;
 
-import static at.ldjr.springbootapp.InvoiceController.getUserID;
 
 public class RpcClient implements AutoCloseable {
 
@@ -18,6 +16,7 @@ public class RpcClient implements AutoCloseable {
     private String requestQueueName2 = "toStationDataCollector";
     private String requestQueueName3 = "toDataCollectionReceiver";
     private String requestQueueName4 = "toPdfGenerator";
+    public static String startMQ = "startMQ";
 
     public RpcClient() throws IOException, TimeoutException {
         ConnectionFactory factory = new ConnectionFactory();
@@ -29,18 +28,38 @@ public class RpcClient implements AutoCloseable {
 
     public static void main(String[] argv) {
 
+        //
+        try {
+            ConnectionFactory factory = new ConnectionFactory();
+            factory.setHost("localhost");
+            Connection connection = factory.newConnection();
+            Channel channel = connection.createChannel();
+
+            channel.queueDeclare(startMQ, false, false, false, null);
+            System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
+
+            DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+                String customerId = new String(delivery.getBody(), StandardCharsets.UTF_8);
+                System.out.println(" [x] Received CustomerId: '" + customerId + "'");
+                startProcess(customerId);
+                System.out.println(" [x] Started MessageQueue");
+            };
+            channel.basicConsume(startMQ, true, deliverCallback, consumerTag -> {
+            });
+        } catch (IOException | TimeoutException e) {
+            e.printStackTrace();
+        }
+    }
+    public static void startProcess(String id){
         String regex = "[,\\.\\s]";
-        String customerId = getUserID();
         String availableStations = "";
         String messageReceiverToPdf = "";
-
-
         int total = 0;
         try (RpcClient sendDataToReceiver = new RpcClient()) {
 
             //TODO wenn die query für alle customer daten geht wird hier nicht nur die id sondern alles vom customer übergeben
-            sendDataToReceiver.callToDataCollectionReceiver(customerId);
-            System.out.println("Sent Customer Id: "+ customerId +" to Data Collection Receiver");
+            sendDataToReceiver.callToDataCollectionReceiver(id);
+            System.out.println("Sent Customer Id: "+ id +" to Data Collection Receiver");
 
             try (RpcClient sendCustomerId = new RpcClient()) {
                 System.out.println(" [x] Requesting information on available Stations");
@@ -49,10 +68,10 @@ public class RpcClient implements AutoCloseable {
 
                 String[] myArray = availableStations.split(regex);
                 for (String s : myArray) {
-                    String idAndStation = customerId + " " + s;
+                    String idAndStation = id + " " + s;
                     try (RpcClient getStationData = new RpcClient()) {
 
-                        System.out.println("[x] Requesting Station " + s + " data for customer " + customerId);
+                        System.out.println("[x] Requesting Station " + s + " data for customer " + id);
                         //für jede station
 
                         total += Integer.parseInt(getStationData.callToStationDataCollector(idAndStation));
@@ -78,6 +97,7 @@ public class RpcClient implements AutoCloseable {
         }
 
     }
+
 
     public String callToPdfGenerator(String message) throws IOException, InterruptedException, ExecutionException {
         final String corrId = UUID.randomUUID().toString();

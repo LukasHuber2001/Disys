@@ -17,10 +17,8 @@ public class DataCollectionDispatcher {
 
     private static String getAvailableStations() {
         List<String> stationIds = new ArrayList<>();
-<<<<<<< HEAD
-=======
         String dbUrl = "jdbc:postgresql://localhost:30002/stationdb"; // Adjust the DB URL if necessary
->>>>>>> ad48d5b9b4eea969493fef73c48c0436c50b212b
+
         String user = "postgres";
         String password = "postgres";
 
@@ -42,14 +40,8 @@ public class DataCollectionDispatcher {
         ConnectionFactory factory = new ConnectionFactory();
         factory.setHost("localhost");
 
-<<<<<<< HEAD
             com.rabbitmq.client.Connection connection = factory.newConnection();
             Channel channel = connection.createChannel();{
-=======
-        com.rabbitmq.client.Connection connection = factory.newConnection();
-        Channel channel = connection.createChannel();
-        {
->>>>>>> ad48d5b9b4eea969493fef73c48c0436c50b212b
             channel.queueDeclare(RPC_QUEUE_NAME, false, false, false, null);
             channel.queuePurge(RPC_QUEUE_NAME);
             channel.basicQos(1);
@@ -62,11 +54,7 @@ public class DataCollectionDispatcher {
                         .correlationId(delivery.getProperties().getCorrelationId())
                         .build();
                 String response = "";
-<<<<<<< HEAD
 
-
-=======
->>>>>>> ad48d5b9b4eea969493fef73c48c0436c50b212b
                 try {
                     System.out.println(" [.] Started Dispatching Job");
                     response = getAvailableStations();

@@ -1,22 +1,40 @@
 package at.ldjr.springbootapp;
 
+import com.rabbitmq.client.ConnectionFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.HttpStatus;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.concurrent.TimeoutException;
+
+import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.Channel;
 
 @RestController
 @RequestMapping("/invoices")
 public class InvoiceController {
-
-    public static String userID="";
+    public static String startMQ = "startMQ";
 
     @PostMapping("/post/{customerId}")
     public ResponseEntity<String> startDataGatheringJob(@PathVariable String customerId) {
         try {
-            userID = customerId;
+            ConnectionFactory factory = new ConnectionFactory();
+            factory.setHost("localhost");
+            try (Connection connection = factory.newConnection();
+                 Channel channel = connection.createChannel()) {
+                channel.queueDeclare(startMQ, false, false, false, null);
+                String message = customerId;
+                channel.basicPublish("", startMQ, null, message.getBytes(StandardCharsets.UTF_8));
+                System.out.println(" [x] Sent '" + message + "'");
+            }catch (IOException | TimeoutException e) {
+                e.printStackTrace();
+        }
             return ResponseEntity.ok("Data gathering job started for customer " + customerId);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error starting data gathering job: " + e.getMessage());
@@ -38,8 +56,6 @@ public class InvoiceController {
         }
     }
 
-    public static String getUserID() {
-        return userID;
-    }
+
 }
 
